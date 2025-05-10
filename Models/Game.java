@@ -2,6 +2,7 @@ package Models;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Game {
@@ -10,8 +11,9 @@ public class Game {
 
     static int MAX_ROUNDS = 100;
 
-    static Player player1 = new Player("Angi");
-    static Player player2 = new Player("Mehdi");
+
+    static Player player1;
+    static Player player2;
 
     static void start(){
         Game.table = new ArrayList<>();

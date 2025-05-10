@@ -5,13 +5,14 @@ import org.w3c.dom.ls.LSOutput;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
+import static Models.Game.player1;
+import static Models.Game.player2;
 
 public class Main {
 
     public static void main(String[] args) {
 
-        Player player1 = Game.player1;
-        Player player2 = Game.player2;
+        promptPlayersNames();
 
         Collections.shuffle(Deck.allCards);
         player1.instantiateHand(1);
@@ -98,6 +99,16 @@ public class Main {
 
 
 
+    }
+
+    private static void promptPlayersNames() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("player 1 enter name : ");
+        String player1Name = sc.nextLine();
+        Game.player1 = new Player(player1Name);
+        System.out.println("player 2 enter name : ");
+        String player2Name = sc.nextLine();
+        Game.player2 = new Player(player2Name);
     }
 
 
