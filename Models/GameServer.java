@@ -191,10 +191,12 @@ public class GameServer {
             Game.start();
 
             turn = 1;
+            GameServer.getGameServerConnection1().sendToPlayer1("YOUR_TURN");
             Card cardPickedByPlayer1 = player1.putInTable();
             GameServer.getGameServerConnection1().sendToPlayers("card picked " + cardPickedByPlayer1.value);
             gameServerConnection1.sendToPlayers("\n");
             turn = 2;
+            GameServer.getGameServerConnection1().sendToPlayer2("YOUR_TURN");
             Card cardPickedByPlayer2 = player2.putInTable();
             GameServer.getGameServerConnection1().sendToPlayers("card picked " + cardPickedByPlayer2.value);
             gameServerConnection1.sendToPlayers("\n");

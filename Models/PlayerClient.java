@@ -2,6 +2,7 @@ package Models;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.PrimitiveIterator;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
 
@@ -15,6 +16,9 @@ public class PlayerClient {
     private final BufferedWriter bufferedWriter;
     private final BufferedReader bufferedReader;
     private int n = 0;
+    private volatile boolean myTurn = false;
+
+
     public PlayerClient(Socket socket) throws IOException {
         n++;
         this.socket = socket;
@@ -52,13 +56,24 @@ public class PlayerClient {
 
     public void sendChoice() throws IOException {
         new Thread(() -> {
+            Scanner sc = new Scanner(System.in);
             while (socket.isConnected()) {
                 try {
-                    Scanner sc = new Scanner(System.in);
+                    // could also use synchronization with a lock.wait to release lock and block
+                    // and a function tu turn the boolean to true and notify lock then put it to false again
+                    while (!myTurn) {
+                        Thread.onSpinWait();
+                    }
+                    // discard all choices typed before the turn
+                    while (System.in.available() > 0){
+                        sc.nextLine();
+                    }
                     String choice = sc.nextLine();
                     bufferedWriter.write(choice);
                     bufferedWriter.newLine();
                     bufferedWriter.flush();
+
+                    myTurn = false;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -72,6 +87,9 @@ public class PlayerClient {
             while (socket.isConnected()) {
                 try {
                     String msgFromServer = bufferedReader.readLine();
+                    if (msgFromServer.equals("YOUR_TURN")) {
+                        myTurn = true;
+                    }
                     System.out.println(msgFromServer);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -81,10 +99,7 @@ public class PlayerClient {
     }
 
     public static void main(String[] args) throws IOException {
-
-
         Socket socket = new Socket("localhost",1234);
-
         PlayerClient playerClient = new PlayerClient(socket);
         playerClient.listenToServer();
         playerClient.sendChoice();
