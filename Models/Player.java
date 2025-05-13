@@ -1,9 +1,13 @@
 package Models;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public class Player {
 
@@ -20,36 +24,42 @@ public class Player {
     static final int MAX_SHUFFLES_AFTER_EXCEEDED = 1;
 
     boolean exceededShuffles = false;
-
     // picks 24 random cards from deck
     List<Card> instantiateHand(int playerNumber) {
         hand = new ArrayList<>(playerNumber == 1 ? Deck.allCards.subList(0,24) : Deck.allCards.subList(24,48));
         return hand;
     }
-
     // puts in table and removes from hand
     Card putInTable() {
-
-        if (this.exceededShuffles) {
-            System.out.println(this.name + " you have : " + this.hand.size() + " cards");
-            System.out.println("you have "+ (MAX_SHUFFLES_AFTER_EXCEEDED - this.numberOfShufflesAfterExceeded) +" shuffle left");
-            return cardPickedAfterExceededShuffles();
-        }
-        else {
-            System.out.println(this.name + " you have : " + this.hand.size() + " cards");
-            System.out.println("you have " + (MAX_SHUFFLES - this.numberOfShuffles) + " shuffles left");
-            return cardPicked();
+        try {
+            if (this.exceededShuffles) {
+                GameServer.getGameServerConnection1().sendToPlayers(this.name + " you have : " + this.hand.size() + " cards");
+                GameServer.getGameServerConnection1().sendToPlayers("you have "+ (MAX_SHUFFLES_AFTER_EXCEEDED - this.numberOfShufflesAfterExceeded) +" shuffle left");
+                return cardPickedAfterExceededShuffles();
+            }
+            else {
+                GameServer.getGameServerConnection1().sendToPlayers(this.name + " you have : " + this.hand.size() + " cards");
+                GameServer.getGameServerConnection1().sendToPlayers("you have " + (MAX_SHUFFLES - this.numberOfShuffles) + " shuffles left");
+                return cardPicked();
+            }
+        } catch (IOException | ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+            return null;
         }
     }
+    Card cardPicked() throws IOException, ExecutionException, InterruptedException {
 
-
-    Card cardPicked() {
         //this.hand.stream().map(card -> (hand.indexOf(card) + 1) + ":" + card.value).forEach(s -> System.out.print(s + " "));
-        System.out.println("Current card : "+this.hand.get(0).value);
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("press p to play card " + this.hand.get(0).value);
-        if (MAX_SHUFFLES - this.numberOfShuffles > 0) System.out.println("press s to shuffle");
-        String choice = scanner.nextLine();
+        GameServer.getGameServerConnection1().sendToPlayers("Current card : " + this.hand.get(0).value);
+        GameServer.getGameServerConnection1().sendToPlayers("press p to play card " + this.hand.get(0).value);
+        if (MAX_SHUFFLES - this.numberOfShuffles > 0) GameServer.getGameServerConnection1().sendToPlayers("press s to shuffle");
+        String choice = "";
+        if (this.equals(Game.player1)) {
+            choice = GameServer.executorService.submit(GameServer.getGameServerConnection1()).get();
+        }
+        if (this.equals(Game.player2)) {
+            choice = GameServer.executorService.submit(GameServer.getGameServerConnection2()).get();
+        }
         Card firstCard = this.hand.get(0);
         // if still has more shuffles
         if (MAX_SHUFFLES - this.numberOfShuffles > 0) {
@@ -66,14 +76,14 @@ public class Player {
                     }
                     else {
                         exceededShuffles = true;
-                        System.out.println("limit number of shuffles exceeded, first was card of value "
+                        GameServer.getGameServerConnection1().sendToPlayers("limit number of shuffles exceeded, first was card of value "
                                 + firstCard + "was put in table ");
                         Game.table.add(firstCard);
                         this.hand.remove(0);
                     }
                 }
                 default -> {
-                    System.out.println("invalid choice, please play your card or shuffle");
+                    GameServer.getGameServerConnection1().sendToPlayers("invalid choice, please play your card or shuffle");
                     return putInTable();
                 }
             }
@@ -147,24 +157,20 @@ public class Player {
         }
         return firstCard;
     }
-
     // picks table and clears it
     List<Card> pickTable() {
         List<Card> tablePicked = new ArrayList<>();
         this.hand.addAll(Game.table);
         tablePicked.addAll(Game.table);
         Game.table.clear();
-        System.out.println(this.name + " picked the table");
+        GameServer.getGameServerConnection1().sendToPlayers(this.name + " picked the table");
         return tablePicked;
     }
-
     public Player(String name) {
         this.name = name;
     }
-
     public Player() {
     }
-
     // put in table 4 cards in war and removes them from player's hand,
     // if not enough cards for a player, puts only one (the player will lose it)
     List<Card> putInMiddleInWar(){

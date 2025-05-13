@@ -10,13 +10,18 @@ public class Game {
     static List<Card> table;
 
     static int MAX_ROUNDS = 100;
+    static boolean started = false;
 
+    public static boolean isStarted() {
+        return started;
+    }
 
     static Player player1;
     static Player player2;
 
     static void start(){
         Game.table = new ArrayList<>();
+        started = true;
     }
 
     static void printTable(List<Card> cardsPickedByPlayer1, List<Card> cardsPickedByPlayer2) {
