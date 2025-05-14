@@ -60,8 +60,10 @@ public class PlayerClient {
                         Thread.onSpinWait();
                     }
                     // discard all choices typed before the turn
-                    while (System.in.available() > 0){
-                        sc.nextLine();
+
+                    BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+                    while (in.ready()) {
+                        in.readLine();
                     }
                     String choice = sc.nextLine();
                     bufferedWriter.write(choice);
