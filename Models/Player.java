@@ -63,20 +63,10 @@ public class Player {
                     this.hand.remove(0);
                 }
                 case "s" -> {
-                    if (numberOfShuffles < MAX_SHUFFLES){
-                        Collections.shuffle(this.hand);
-                        numberOfShuffles++;
-                        keepRound();
-                        return putInTable();
-                    }
-                    else {
-
-                        exceededShuffles = true;
-                        GameServerUtils.sendToPlayers("limit number of shuffles exceeded, first was card of value "
-                                + firstCard + "was put in table ");
-                        Game.table.add(firstCard);
-                        this.hand.remove(0);
-                    }
+                    Collections.shuffle(this.hand);
+                    numberOfShuffles++;
+                    keepRound();
+                    return putInTable();
                 }
                 default -> {
                     GameServerUtils.sendToPlayers("invalid choice, please play your card or shuffle");
@@ -120,19 +110,10 @@ public class Player {
                     this.hand.remove(0);
                 }
                 case "s" -> {
-                    if (numberOfShufflesAfterExceeded < MAX_SHUFFLES_AFTER_EXCEEDED){
-                        Collections.shuffle(this.hand);
-                        numberOfShufflesAfterExceeded++;
-                        keepRound();
-                        return putInTable();
-                    }
-                    else {
-                        exceededShuffles = true;
-                        GameServerUtils.sendToPlayers("limit number of shuffles exceeded, first was card of value "
-                                + firstCard + "was put in table ");
-                        Game.table.add(firstCard);
-                        this.hand.remove(0);
-                    }
+                    Collections.shuffle(this.hand);
+                    numberOfShufflesAfterExceeded++;
+                    keepRound();
+                    return putInTable();
                 }
                 default -> {
                     GameServerUtils.sendToPlayers("invalid choice, please play your card or shuffle");
