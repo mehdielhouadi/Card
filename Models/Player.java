@@ -66,9 +66,11 @@ public class Player {
                     if (numberOfShuffles < MAX_SHUFFLES){
                         Collections.shuffle(this.hand);
                         numberOfShuffles++;
+                        keepRound();
                         return putInTable();
                     }
                     else {
+
                         exceededShuffles = true;
                         GameServerUtils.sendToPlayers("limit number of shuffles exceeded, first was card of value "
                                 + firstCard + "was put in table ");
@@ -78,12 +80,7 @@ public class Player {
                 }
                 default -> {
                     GameServerUtils.sendToPlayers("invalid choice, please play your card or shuffle");
-                    if (this.equals(Game.player1)) {
-                        GameServerUtils.sendToPlayer1("YOUR_TURN");
-                    }
-                    if (this.equals(Game.player2)) {
-                        GameServerUtils.sendToPlayer2("YOUR_TURN");
-                    }
+                    keepRound();
                     return putInTable();
                 }
             }
@@ -99,12 +96,7 @@ public class Player {
                 }
                 default -> {
                     GameServerUtils.sendToPlayers("invalid choice, please play your card");
-                    if (this.equals(Game.player1)) {
-                        GameServerUtils.sendToPlayer1("YOUR_TURN");
-                    }
-                    if (this.equals(Game.player2)) {
-                        GameServerUtils.sendToPlayer2("YOUR_TURN");
-                    }
+                    keepRound();
                     return putInTable();
                 }
             }
@@ -131,27 +123,20 @@ public class Player {
                     if (numberOfShufflesAfterExceeded < MAX_SHUFFLES_AFTER_EXCEEDED){
                         Collections.shuffle(this.hand);
                         numberOfShufflesAfterExceeded++;
+                        keepRound();
                         return putInTable();
                     }
                     else {
                         exceededShuffles = true;
                         GameServerUtils.sendToPlayers("limit number of shuffles exceeded, first was card of value "
                                 + firstCard + "was put in table ");
-
-
-
                         Game.table.add(firstCard);
                         this.hand.remove(0);
                     }
                 }
                 default -> {
                     GameServerUtils.sendToPlayers("invalid choice, please play your card or shuffle");
-                    if (this.equals(Game.player1)) {
-                        GameServerUtils.sendToPlayer1("YOUR_TURN");
-                    }
-                    if (this.equals(Game.player2)) {
-                        GameServerUtils.sendToPlayer2("YOUR_TURN");
-                    }
+                    keepRound();
                     return putInTable();
                 }
             }
@@ -165,6 +150,7 @@ public class Player {
                 }
                 default -> {
                     System.out.println("invalid choice, please play your card");
+                    keepRound();
                     return putInTable();
                 }
             }
@@ -201,6 +187,15 @@ public class Player {
             this.hand.remove(i);
         }
         return cardsPut;
+    }
+
+    public void keepRound() {
+        if (this.equals(Game.player1)) {
+            GameServerUtils.sendToPlayer1("YOUR_TURN");
+        }
+        if (this.equals(Game.player2)) {
+            GameServerUtils.sendToPlayer2("YOUR_TURN");
+        }
     }
 
 }
