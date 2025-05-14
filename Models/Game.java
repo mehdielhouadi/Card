@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static Models.GameServerUtils.sendToPlayer1;
 import static Models.GameServerUtils.sendToPlayers;
 
 public class Game {
@@ -34,15 +35,15 @@ public class Game {
                 "card" + i.getAndIncrement() + ":" + card.value + "; " :
                 "card" + i.getAndIncrement() + " ")
                 .forEach(GameServerUtils::sendWONewLine);
-        System.out.println("],");
+        sendToPlayers("],");
         sendToPlayers("    " + player2.name + " cards : [");
         AtomicInteger j = new AtomicInteger(1);
         cardsPickedByPlayer2.stream().map(card -> j.get() == 1 ?
                 "card" + j.getAndIncrement() + ":" + card.value + "; " :
                 "card" + j.getAndIncrement() + " ")
                 .forEach(GameServerUtils::sendWONewLine);
-        System.out.print("]");
-        System.out.println("}");
+        sendToPlayers("]");
+        sendToPlayers("}");
     }
 
 }

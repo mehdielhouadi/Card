@@ -85,7 +85,10 @@ public class PlayerClient {
                     if (msgFromServer.equals("YOUR_TURN")) {
                         myTurn = true;
                     }
-                    System.out.println(msgFromServer);
+                    if (!msgFromServer.equals("YOUR_TURN")) {
+                        System.out.println(msgFromServer);;
+                    }
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

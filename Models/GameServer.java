@@ -122,7 +122,7 @@ public class GameServer {
         int round = 0;
 
         A : while (round <= Game.MAX_ROUNDS) {
-            System.out.println();
+            sendToPlayers("");;
             round++;
             if (round <= Game.MAX_ROUNDS) sendToPlayers("this is round " + round + "\n");
             if (round > Game.MAX_ROUNDS) {
@@ -144,24 +144,19 @@ public class GameServer {
 
             sendToPlayer1("YOUR_TURN");
             Card cardPickedByPlayer1 = player1.putInTable();
-            sendToPlayers("card picked " + cardPickedByPlayer1.value);
-            sendToPlayers("\n");
+
             sendToPlayer2("YOUR_TURN");
             Card cardPickedByPlayer2 = player2.putInTable();
-            sendToPlayers("card picked " + cardPickedByPlayer2.value);
-            sendToPlayers("\n");
-            sendWONewLine("current table : { ") ;
-            Game.table.stream().map(card -> card.value)
-                    .forEach(integer -> sendWONewLine(integer + " "));
-            sendToPlayers("}");
+
+            GameServerUtils.printNormalTable();
 
             if(cardPickedByPlayer1.value > cardPickedByPlayer2.value){
                 player1.pickTable();
-                System.out.println();
+                sendToPlayers("");
             }
             if(cardPickedByPlayer2.value > cardPickedByPlayer1.value){
                 player2.pickTable();
-                System.out.println();
+                sendToPlayers("");
             }
             if(cardPickedByPlayer1.value == cardPickedByPlayer2.value){
                 B : while (true){

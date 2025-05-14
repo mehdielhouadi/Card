@@ -64,4 +64,12 @@ public class GameServerUtils {
             e.printStackTrace();
         }
     }
+
+    public static void printNormalTable() {
+        sendWONewLine("\n");
+        sendWONewLine("current table : { ") ;
+        Game.table.stream().map(card -> card.value)
+                .forEach(integer -> sendWONewLine(integer + " "));
+        sendToPlayers("}");
+    }
 }

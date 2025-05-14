@@ -27,13 +27,13 @@ public class Player {
     Card putInTable() {
         try {
             if (this.exceededShuffles) {
-                GameServerUtils.sendToPlayers(this.name + " you have : " + this.hand.size() + " cards");
-                GameServerUtils.sendToPlayers("you have "+ (MAX_SHUFFLES_AFTER_EXCEEDED - this.numberOfShufflesAfterExceeded) +" shuffle left");
+                sendToPlayerInTurn(this.name + " you have : " + this.hand.size() + " cards");
+                sendToPlayerInTurn("you have "+ (MAX_SHUFFLES_AFTER_EXCEEDED - this.numberOfShufflesAfterExceeded) +" shuffle left");
                 return cardPickedAfterExceededShuffles();
             }
             else {
-                GameServerUtils.sendToPlayers(this.name + " you have : " + this.hand.size() + " cards");
-                GameServerUtils.sendToPlayers("you have " + (MAX_SHUFFLES - this.numberOfShuffles) + " shuffles left");
+                sendToPlayerInTurn(this.name + " you have : " + this.hand.size() + " cards");
+                sendToPlayerInTurn("you have " + (MAX_SHUFFLES - this.numberOfShuffles) + " shuffles left");
                 return cardPicked();
             }
         } catch (IOException | ExecutionException | InterruptedException e) {
@@ -44,9 +44,10 @@ public class Player {
     Card cardPicked() throws IOException, ExecutionException, InterruptedException {
 
         //this.hand.stream().map(card -> (hand.indexOf(card) + 1) + ":" + card.value).forEach(s -> System.out.print(s + " "));
-        GameServerUtils.sendToPlayers("Current card : " + this.hand.get(0).value);
-        GameServerUtils.sendToPlayers("press p to play card " + this.hand.get(0).value);
-        if (MAX_SHUFFLES - this.numberOfShuffles > 0) GameServerUtils.sendToPlayers("press s to shuffle");
+        sendToPlayerNotInTurn("waiting for the other player to play");
+        sendToPlayerInTurn("Current card : " + this.hand.get(0).value);
+        sendToPlayerInTurn("press p to play card " + this.hand.get(0).value);
+        if (MAX_SHUFFLES - this.numberOfShuffles > 0) sendToPlayerInTurn("press s to shuffle");
         String choice = "";
         if (this.equals(Game.player1)) {
             choice = GameServer.executorService.submit(GameServer.getGameServerConnection1()).get();
@@ -91,12 +92,14 @@ public class Player {
                 }
             }
         }
+        sendToPlayerInTurn("card picked " + firstCard.value +"\n");
         return firstCard;
     }
     Card cardPickedAfterExceededShuffles() throws ExecutionException, InterruptedException {
-
         //this.hand.stream().map(card -> (hand.indexOf(card) + 1) + ":" + card.value).forEach(s -> System.out.print(s + " "));
         GameServerUtils.sendToPlayers("Current card : "+this.hand.get(0).value);
+        GameServerUtils.sendToPlayers("press p to play card " + this.hand.get(0).value);
+        if (MAX_SHUFFLES_AFTER_EXCEEDED - this.numberOfShufflesAfterExceeded > 0) GameServerUtils.sendToPlayers("press s to shuffle");
         String choice = "";
         if (this.equals(Game.player1)) {
             choice = GameServer.executorService.submit(GameServer.getGameServerConnection1()).get();
@@ -104,8 +107,6 @@ public class Player {
         if (this.equals(Game.player2)) {
             choice = GameServer.executorService.submit(GameServer.getGameServerConnection2()).get();
         }
-        GameServerUtils.sendToPlayers("press p to play card " + this.hand.get(0).value);
-        if (MAX_SHUFFLES_AFTER_EXCEEDED - this.numberOfShufflesAfterExceeded > 0) GameServerUtils.sendToPlayers("press s to shuffle");
         Card firstCard = this.hand.get(0);
 
         if (MAX_SHUFFLES_AFTER_EXCEEDED - this.numberOfShufflesAfterExceeded > 0) {
@@ -135,7 +136,7 @@ public class Player {
                     this.hand.remove(0);
                 }
                 default -> {
-                    System.out.println("invalid choice, please play your card");
+                    GameServerUtils.sendToPlayers("invalid choice, please play your card");
                     keepRound();
                     return putInTable();
                 }
@@ -181,6 +182,21 @@ public class Player {
         }
         if (this.equals(Game.player2)) {
             GameServerUtils.sendToPlayer2("YOUR_TURN");
+        }
+    }
+    public void sendToPlayerInTurn(String msg){
+        if (this.equals(Game.player1)) {
+            GameServerUtils.sendToPlayer1(msg);
+        } else {
+            GameServerUtils.sendToPlayer2(msg);
+        }
+    }
+
+    public void sendToPlayerNotInTurn(String msg){
+        if (this.equals(Game.player1)) {
+            GameServerUtils.sendToPlayer2(msg);
+        } else {
+            GameServerUtils.sendToPlayer1(msg);
         }
     }
 
