@@ -6,14 +6,17 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Scanner;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static Models.Game.player1;
 import static Models.Game.player2;
+import static Models.GameServerUtils.closeAll;
+import static Models.GameServerUtils.sendToPlayer1;
+import static Models.GameServerUtils.sendToPlayer2;
+import static Models.GameServerUtils.sendToPlayers;
+import static Models.GameServerUtils.sendWONewLine;
 
 public class GameServer {
     private static ServerSocket serverSocket;
@@ -25,23 +28,20 @@ public class GameServer {
             e.printStackTrace();
         }
     }
+    private static List<GameServerConnection> gameServerConnections = new ArrayList<>();
     private static GameServerConnection gameServerConnection1;
     private static GameServerConnection gameServerConnection2;
     public static ExecutorService executorService = Executors.newFixedThreadPool(4);
-    public static int turn = 1;
     public static GameServerConnection getGameServerConnection1() {
         return gameServerConnection1;
     }
-
     public static GameServerConnection getGameServerConnection2() {
         return gameServerConnection2;
     }
-
     public static List<GameServerConnection> getGameServerConnections() {
         return gameServerConnections;
     }
 
-    private static List<GameServerConnection> gameServerConnections = new ArrayList<>();
     static class GameServerConnection implements Callable<String> {
         private static int numberOfPlayers = 0;
         private Socket socket;
@@ -49,6 +49,10 @@ public class GameServer {
         private BufferedWriter bWriter;
         private static Player player1;
         private static Player player2;
+
+        public Socket getSocket() {
+            return socket;
+        }
 
         public BufferedReader getbReader() {
             return bReader;
@@ -63,15 +67,18 @@ public class GameServer {
             this.socket = socket;
             this.bReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.bWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            if (numberOfPlayers == 1) GameServer.gameServerConnection1 = this;
-            if (numberOfPlayers == 2) GameServer.gameServerConnection2 = this;
             String name = bReader.readLine();
-            if (numberOfPlayers == 1) player1 = new Player(name);
-            if (numberOfPlayers == 2) player2 = new Player(name);
-            if (numberOfPlayers == 1) Game.player1 = player1;
-            if (numberOfPlayers == 2) Game.player2 = player2;
-            if (numberOfPlayers == 1) GameServerConnection.player1 = player1;
-            if (numberOfPlayers == 2) GameServerConnection.player2 = player2;
+            Player player = new Player(name);
+            if (numberOfPlayers == 1) {
+                GameServer.gameServerConnection1 = this;
+                player1 = player;
+                Game.player1 = player1;
+            }
+            if (numberOfPlayers == 2) {
+                GameServer.gameServerConnection2 = this;
+                player2 = player;
+                Game.player2 = player2;
+            }
         }
 
         public static void connectPlayers() throws InterruptedException {
@@ -85,67 +92,12 @@ public class GameServer {
             }
             gameServerConnections = List.of(gameServerConnection1, gameServerConnection2);
         }
-        public void closeAll(Socket socket, BufferedWriter bufferedWriter, BufferedReader bufferedReader) {
-            try {
-                if (socket != null) {
-                    socket.close();
-                }
-                if (socket != null) {
-                    socket.close();
-                }
-                if (socket != null) {
-                    socket.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        public void sendToPlayers(String msg) {
-            for (GameServerConnection gsc : GameServer.gameServerConnections) {
-                try {
-                    gsc.bWriter.write(msg);
-                    gsc.bWriter.newLine();
-                    gsc.bWriter.flush();
-                } catch (IOException e) {
-                closeAll(socket, bWriter, bReader);
-                }
-            }
-        }
-        public void sendWONewLine(String msg) {
-            for (GameServerConnection gsc : GameServer.gameServerConnections) {
-                try {
-                    gsc.bWriter.write(msg);
-                    gsc.bWriter.flush();
-                } catch (IOException e) {
-                closeAll(socket, bWriter, bReader);
-                }
-            }
-        }
-        public void sendToPlayer1(String msg) {
-            try {
-                gameServerConnection1.bWriter.write(msg);
-                gameServerConnection1.bWriter.newLine();
-                gameServerConnection1.bWriter.flush();
-            } catch (IOException e) {
-            closeAll(socket, bWriter, bReader);
-            }
 
-        }
-        public void sendToPlayer2(String msg) {
-            try {
-                gameServerConnection2.bWriter.write(msg);
-                gameServerConnection2.bWriter.newLine();
-                gameServerConnection2.bWriter.flush();
-            } catch (IOException e) {
-            closeAll(socket, bWriter, bReader);
-            }
-        }
         @Override
         public String call() {
             if (socket.isConnected()) {
                 try {
                     if (Game.isStarted()) {
-                        //TODO if this connection.player() is the same as the player in the turn else sendToPlayers wait for your turn
                         String playerChoice = bReader.readLine();
                         return playerChoice;
                     }
@@ -166,44 +118,42 @@ public class GameServer {
         Collections.shuffle(Deck.allCards);
         player1.instantiateHand(1);
         player2.instantiateHand(2);
-        gameServerConnection1.sendToPlayers("Game has started\n");
+        sendToPlayers("Game has started\n");
         int round = 0;
 
         A : while (round <= Game.MAX_ROUNDS) {
             System.out.println();
             round++;
-            if (round <= Game.MAX_ROUNDS) gameServerConnection1.sendToPlayers("this is round " + round + "\n");
+            if (round <= Game.MAX_ROUNDS) sendToPlayers("this is round " + round + "\n");
             if (round > Game.MAX_ROUNDS) {
-                gameServerConnection1.sendToPlayers("exceeded number of rounds");
-                gameServerConnection1.sendToPlayers(player1.hand.size() > player2.hand.size() ? player1.name + " won" : player2.name + " won");
+                sendToPlayers("exceeded number of rounds");
+                sendToPlayers(player1.hand.size() > player2.hand.size() ? player1.name + " won" : player2.name + " won");
                 break;
             }
 
             if(player1.hand.isEmpty()) {
-                gameServerConnection1.sendToPlayers(player2.name + " won");
+                sendToPlayers(player2.name + " won");
                 break A;
             }
 
             if(player2.hand.isEmpty()) {
-                gameServerConnection1.sendToPlayers(player1.name + " won");
+                sendToPlayers(player1.name + " won");
                 break A;
             }
             Game.start();
 
-            turn = 1;
-            GameServer.getGameServerConnection1().sendToPlayer1("YOUR_TURN");
+            sendToPlayer1("YOUR_TURN");
             Card cardPickedByPlayer1 = player1.putInTable();
-            GameServer.getGameServerConnection1().sendToPlayers("card picked " + cardPickedByPlayer1.value);
-            gameServerConnection1.sendToPlayers("\n");
-            turn = 2;
-            GameServer.getGameServerConnection1().sendToPlayer2("YOUR_TURN");
+            sendToPlayers("card picked " + cardPickedByPlayer1.value);
+            sendToPlayers("\n");
+            sendToPlayer2("YOUR_TURN");
             Card cardPickedByPlayer2 = player2.putInTable();
-            GameServer.getGameServerConnection1().sendToPlayers("card picked " + cardPickedByPlayer2.value);
-            gameServerConnection1.sendToPlayers("\n");
-            gameServerConnection1.sendWONewLine("current table : { ") ;
+            sendToPlayers("card picked " + cardPickedByPlayer2.value);
+            sendToPlayers("\n");
+            sendWONewLine("current table : { ") ;
             Game.table.stream().map(card -> card.value)
-                    .forEach(integer -> GameServer.getGameServerConnection1().sendWONewLine(integer + " "));
-            gameServerConnection1.sendToPlayers("}");
+                    .forEach(integer -> sendWONewLine(integer + " "));
+            sendToPlayers("}");
 
             if(cardPickedByPlayer1.value > cardPickedByPlayer2.value){
                 player1.pickTable();
@@ -250,19 +200,6 @@ public class GameServer {
                 }
             }
         }
-
-
-
-    }
-
-    private static void promptPlayersNames() {
-        Scanner sc = new Scanner(System.in);
-        System.out.println("player 1 enter name : ");
-        String player1Name = sc.nextLine();
-        Game.player1 = new Player(player1Name);
-        System.out.println("player 2 enter name : ");
-        String player2Name = sc.nextLine();
-        Game.player2 = new Player(player2Name);
     }
 
 

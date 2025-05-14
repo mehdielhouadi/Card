@@ -10,20 +10,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 public class Player {
-
     String name;
-
     List<Card> hand;
-
     int numberOfShuffles = 0;
-
     int numberOfShufflesAfterExceeded = 0;
-
     static final int MAX_SHUFFLES = 5;
-
     static final int MAX_SHUFFLES_AFTER_EXCEEDED = 1;
-
     boolean exceededShuffles = false;
+
     // picks 24 random cards from deck
     List<Card> instantiateHand(int playerNumber) {
         hand = new ArrayList<>(playerNumber == 1 ? Deck.allCards.subList(0,24) : Deck.allCards.subList(24,48));
@@ -33,13 +27,13 @@ public class Player {
     Card putInTable() {
         try {
             if (this.exceededShuffles) {
-                GameServer.getGameServerConnection1().sendToPlayers(this.name + " you have : " + this.hand.size() + " cards");
-                GameServer.getGameServerConnection1().sendToPlayers("you have "+ (MAX_SHUFFLES_AFTER_EXCEEDED - this.numberOfShufflesAfterExceeded) +" shuffle left");
+                GameServerUtils.sendToPlayers(this.name + " you have : " + this.hand.size() + " cards");
+                GameServerUtils.sendToPlayers("you have "+ (MAX_SHUFFLES_AFTER_EXCEEDED - this.numberOfShufflesAfterExceeded) +" shuffle left");
                 return cardPickedAfterExceededShuffles();
             }
             else {
-                GameServer.getGameServerConnection1().sendToPlayers(this.name + " you have : " + this.hand.size() + " cards");
-                GameServer.getGameServerConnection1().sendToPlayers("you have " + (MAX_SHUFFLES - this.numberOfShuffles) + " shuffles left");
+                GameServerUtils.sendToPlayers(this.name + " you have : " + this.hand.size() + " cards");
+                GameServerUtils.sendToPlayers("you have " + (MAX_SHUFFLES - this.numberOfShuffles) + " shuffles left");
                 return cardPicked();
             }
         } catch (IOException | ExecutionException | InterruptedException e) {
@@ -50,9 +44,9 @@ public class Player {
     Card cardPicked() throws IOException, ExecutionException, InterruptedException {
 
         //this.hand.stream().map(card -> (hand.indexOf(card) + 1) + ":" + card.value).forEach(s -> System.out.print(s + " "));
-        GameServer.getGameServerConnection1().sendToPlayers("Current card : " + this.hand.get(0).value);
-        GameServer.getGameServerConnection1().sendToPlayers("press p to play card " + this.hand.get(0).value);
-        if (MAX_SHUFFLES - this.numberOfShuffles > 0) GameServer.getGameServerConnection1().sendToPlayers("press s to shuffle");
+        GameServerUtils.sendToPlayers("Current card : " + this.hand.get(0).value);
+        GameServerUtils.sendToPlayers("press p to play card " + this.hand.get(0).value);
+        if (MAX_SHUFFLES - this.numberOfShuffles > 0) GameServerUtils.sendToPlayers("press s to shuffle");
         String choice = "";
         if (this.equals(Game.player1)) {
             choice = GameServer.executorService.submit(GameServer.getGameServerConnection1()).get();
@@ -76,14 +70,14 @@ public class Player {
                     }
                     else {
                         exceededShuffles = true;
-                        GameServer.getGameServerConnection1().sendToPlayers("limit number of shuffles exceeded, first was card of value "
+                        GameServerUtils.sendToPlayers("limit number of shuffles exceeded, first was card of value "
                                 + firstCard + "was put in table ");
                         Game.table.add(firstCard);
                         this.hand.remove(0);
                     }
                 }
                 default -> {
-                    GameServer.getGameServerConnection1().sendToPlayers("invalid choice, please play your card or shuffle");
+                    GameServerUtils.sendToPlayers("invalid choice, please play your card or shuffle");
                     return putInTable();
                 }
             }
@@ -163,13 +157,11 @@ public class Player {
         this.hand.addAll(Game.table);
         tablePicked.addAll(Game.table);
         Game.table.clear();
-        GameServer.getGameServerConnection1().sendToPlayers(this.name + " picked the table");
+        GameServerUtils.sendToPlayers(this.name + " picked the table");
         return tablePicked;
     }
     public Player(String name) {
         this.name = name;
-    }
-    public Player() {
     }
     // put in table 4 cards in war and removes them from player's hand,
     // if not enough cards for a player, puts only one (the player will lose it)
@@ -189,7 +181,5 @@ public class Player {
         }
         return cardsPut;
     }
-
-
 
 }

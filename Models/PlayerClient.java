@@ -2,11 +2,7 @@ package Models;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.PrimitiveIterator;
 import java.util.Scanner;
-import java.util.concurrent.Callable;
-
-import static Models.GameServer.turn;
 
 
 public class PlayerClient {
