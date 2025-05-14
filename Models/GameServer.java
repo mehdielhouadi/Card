@@ -166,11 +166,11 @@ public class GameServer {
             if(cardPickedByPlayer1.value == cardPickedByPlayer2.value){
                 B : while (true){
                     if(player1.hand.isEmpty()) {
-                        System.out.println(player2.name + " won");
+                        sendToPlayers(player2.name + " won");
                         break A;
                     }
                     if(player2.hand.isEmpty()) {
-                        System.out.println(player1.name + " won");
+                        sendToPlayers(player1.name + " won");
                         break A;
                     }
                     List<Card> cardsPickedByP1 = player1.putInMiddleInWar();

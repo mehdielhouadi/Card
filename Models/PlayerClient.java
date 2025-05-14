@@ -49,7 +49,6 @@ public class PlayerClient {
         return player;
     }
 
-
     public void sendChoice() throws IOException {
         new Thread(() -> {
             Scanner sc = new Scanner(System.in);
