@@ -93,14 +93,19 @@ public class Player {
         }
         return firstCard;
     }
-    Card cardPickedAfterExceededShuffles() {
+    Card cardPickedAfterExceededShuffles() throws ExecutionException, InterruptedException {
 
         //this.hand.stream().map(card -> (hand.indexOf(card) + 1) + ":" + card.value).forEach(s -> System.out.print(s + " "));
-        System.out.println("Current card : "+this.hand.get(0).value);
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("press p to play card " + this.hand.get(0).value);
-        if (MAX_SHUFFLES_AFTER_EXCEEDED - this.numberOfShufflesAfterExceeded > 0) System.out.println("press s to shuffle");
-        String choice = scanner.nextLine();
+        GameServerUtils.sendToPlayers("Current card : "+this.hand.get(0).value);
+        String choice = "";
+        if (this.equals(Game.player1)) {
+            choice = GameServer.executorService.submit(GameServer.getGameServerConnection1()).get();
+        }
+        if (this.equals(Game.player2)) {
+            choice = GameServer.executorService.submit(GameServer.getGameServerConnection2()).get();
+        }
+        GameServerUtils.sendToPlayers("press p to play card " + this.hand.get(0).value);
+        if (MAX_SHUFFLES_AFTER_EXCEEDED - this.numberOfShufflesAfterExceeded > 0) GameServerUtils.sendToPlayers("press s to shuffle");
         Card firstCard = this.hand.get(0);
 
         if (MAX_SHUFFLES_AFTER_EXCEEDED - this.numberOfShufflesAfterExceeded > 0) {
