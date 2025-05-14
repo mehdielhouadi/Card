@@ -78,6 +78,12 @@ public class Player {
                 }
                 default -> {
                     GameServerUtils.sendToPlayers("invalid choice, please play your card or shuffle");
+                    if (this.equals(Game.player1)) {
+                        GameServerUtils.sendToPlayer1("YOUR_TURN");
+                    }
+                    if (this.equals(Game.player2)) {
+                        GameServerUtils.sendToPlayer2("YOUR_TURN");
+                    }
                     return putInTable();
                 }
             }
@@ -92,7 +98,13 @@ public class Player {
                     exceededShuffles = true;
                 }
                 default -> {
-                    System.out.println("invalid choice, please play your card");
+                    GameServerUtils.sendToPlayers("invalid choice, please play your card");
+                    if (this.equals(Game.player1)) {
+                        GameServerUtils.sendToPlayer1("YOUR_TURN");
+                    }
+                    if (this.equals(Game.player2)) {
+                        GameServerUtils.sendToPlayer2("YOUR_TURN");
+                    }
                     return putInTable();
                 }
             }
@@ -123,14 +135,23 @@ public class Player {
                     }
                     else {
                         exceededShuffles = true;
-                        System.out.println("limit number of shuffles exceeded, first was card of value "
+                        GameServerUtils.sendToPlayers("limit number of shuffles exceeded, first was card of value "
                                 + firstCard + "was put in table ");
+
+
+
                         Game.table.add(firstCard);
                         this.hand.remove(0);
                     }
                 }
                 default -> {
-                    System.out.println("invalid choice, please play your card or shuffle");
+                    GameServerUtils.sendToPlayers("invalid choice, please play your card or shuffle");
+                    if (this.equals(Game.player1)) {
+                        GameServerUtils.sendToPlayer1("YOUR_TURN");
+                    }
+                    if (this.equals(Game.player2)) {
+                        GameServerUtils.sendToPlayer2("YOUR_TURN");
+                    }
                     return putInTable();
                 }
             }
